@@ -1,4 +1,3 @@
-import requests
 from bs4 import BeautifulSoup as bs
 import pandas as pd
 import time
@@ -8,6 +7,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 start_time = time.time()
 
@@ -30,15 +33,25 @@ drvr.get('https://alsuper.com/departamento/frutas-y-verduras-1')
 
 flag = drvr.find_element(By.XPATH, '/html/body/app-root/div/app-home-footer/footer')
 height_old = 0
+n_element = 16
 
 while True:
     flag.location_once_scrolled_into_view
     drvr.execute_script("window.scrollBy(0, -400);")
     height_new = drvr.execute_script("return document.body.scrollHeight;")
-    time.sleep(5)
+    element_to_wait = '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/app-department/div/div/div[1]/div[5]/app-product-card[' + str(n_element) + ']'
+    try:
+        myElem = WebDriverWait(drvr, 5).until(EC.presence_of_element_located((By.XPATH, element_to_wait)))
+    except TimeoutException:
+        print("Tiempo excedido. Se reducirá el número de elemento buscado.")
+        n_element -= 5
+
     if height_old == height_new:
         break
     height_old = height_new
+    n_element += 15
+
+    print(n_element)
  
 # Parsing the HTML
 soup = bs(drvr.page_source, 'html.parser')
@@ -75,6 +88,7 @@ precio_reg = []
 for i in range(len(precios)):
     precio_hoy_it, precio_reg_it = np.split(np.array(precios[i]), 2)
     precio_hoy_it = precio_hoy_it[0].split('/')[0]
+    precio_reg_it = precio_reg_it[0].split('/')[0]
     precio_hoy.append(precio_hoy_it)
     precio_reg.append(precio_reg_it[0])
 
@@ -100,7 +114,7 @@ dict_prods = {'fecha':fecha, 'producto':nombres, 'departamento':categoria, 'prec
 
 df = pd.DataFrame(dict_prods)
 
-pd.DataFrame.to_csv(pd.DataFrame(df), 'data/productos_alsuper.csv')
+pd.DataFrame.to_csv(pd.DataFrame(df), 'data/productos_alsuper_hoy.csv')
 
 final_time = time.time()
 
