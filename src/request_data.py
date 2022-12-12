@@ -18,7 +18,14 @@ brave_path = '/opt/brave.com/brave/brave'
 options.binary_location = brave_path
 options.add_argument('--remote-debugging-port=9224')
 
-drvr = webdriver.Chrome(options=options, service=Service(driver_path))
+brave_options = webdriver.ChromeOptions()
+brave_options.binary_location = brave_path
+brave_options.add_experimental_option(
+    # this will disable image loading
+    "prefs", {"profile.managed_default_content_settings.images": 2}
+)
+
+drvr = webdriver.Chrome(options=options, service=Service(driver_path), chrome_options=brave_options)
 drvr.get('https://alsuper.com/departamento/frutas-y-verduras-1')
 
 flag = drvr.find_element(By.XPATH, '/html/body/app-root/div/app-home-footer/footer')
@@ -32,13 +39,15 @@ while True:
     if height_old == height_new:
         break
     height_old = height_new
-
-r = requests.get('https://alsuper.com/departamento/frutas-y-verduras-1')
  
 # Parsing the HTML
 soup = bs(drvr.page_source, 'html.parser')
 
-# Obtener nombres, precios y medida
+# Obtener categoría, nombres, precios, medida, url
+
+categoria = soup.find('mat-label', attrs={'class': 'as-roboto-slab as-font-24 depart'})
+categoria = categoria.text.strip()
+
 nombres = soup.findAll('mat-label', attrs={'class': 'as-font as-font-blackish'})
 nombres = [nombre.text.strip() for nombre in nombres]
 
@@ -48,6 +57,10 @@ precios = [precio.text.strip() for precio in precios]
 medida = soup.findAll('mat-label', attrs={'class': 'as-font-10 as-font-grey-7e ng-star-inserted'})
 medida = [cantidad.text for cantidad in medida]
 
+url_productos = [url['href'] for url in soup.find_all('a', attrs={'class':'ng-star-inserted'}, href = True)]
+url_productos = [url for url in url_productos if 'producto' in url]
+url_productos = list(map(lambda url: 'https://alsuper.com' + url, url_productos))
+  
 # Dividir entre precios del día de hoy y los normales (misma variable)
 precios = [precios.split(' ') for precios in precios]
 
@@ -79,12 +92,15 @@ for i in range(len(medida)):
 fecha = date.today()
 fecha = [fecha] * len(medida)
 
+# Multiplicar categoria
+categoria = [categoria] * len(medida)
+
 # Creación dataframe
-dict_prods = {'fecha':fecha, 'producto':nombres, 'precio_hoy':precio_hoy, 'precio_reg':precio_reg, 'cantidad':cantidad, 'medida':medido_en}
+dict_prods = {'fecha':fecha, 'producto':nombres, 'departamento':categoria, 'precio_hoy':precio_hoy, 'precio_reg':precio_reg, 'cantidad':cantidad, 'medida':medido_en, 'url':url_productos}
 
 df = pd.DataFrame(dict_prods)
 
-pd.DataFrame.to_csv(pd.DataFrame(df), 'data/productos_alsuper_hoy.csv')
+pd.DataFrame.to_csv(pd.DataFrame(df), 'data/productos_alsuper.csv')
 
 final_time = time.time()
 
