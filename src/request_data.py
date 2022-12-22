@@ -6,7 +6,6 @@ from datetime import date
 import csv
 import os
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 
@@ -26,12 +25,8 @@ start_time = time.time()
 
 path_alsuper = 'https://alsuper.com'
 
-options = Options()
-driver_path = '/home/gera0220/chromedriver'
-brave_path = '/opt/brave.com/brave/brave'
-
-options.binary_location = brave_path
-options.add_argument('--remote-debugging-port=9224')
+driver_path = 'C:/chromedriver.exe'
+brave_path = 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe'
 
 brave_options = webdriver.ChromeOptions()
 brave_options.binary_location = brave_path
@@ -40,7 +35,7 @@ brave_options.add_experimental_option(
     "prefs", {"profile.managed_default_content_settings.images": 2}
 )
 
-drvr = webdriver.Chrome(options=options, service=Service(driver_path), chrome_options=brave_options)
+drvr = webdriver.Chrome(options=brave_options, service=Service(driver_path))
 drvr.get(path_alsuper)
 
 soup = bs(drvr.page_source, 'html.parser')
