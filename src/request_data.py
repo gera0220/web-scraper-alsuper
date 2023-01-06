@@ -135,4 +135,6 @@ for departamento in enlaces_departamentos:
 
 final_time = time.time()
 
+drvr.quit()
+
 print(f'Tiempo de ejecución: {final_time - start_time}')
