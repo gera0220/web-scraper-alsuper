@@ -35,7 +35,7 @@ brave_options.add_experimental_option(
     "prefs", {"profile.managed_default_content_settings.images": 2}
 )
 
-drvr = webdriver.Chrome(options=brave_options, service=Service(driver_path))
+drvr = webdriver.Chrome(options=brave_options, executable_path=driver_path)
 drvr.get(path_alsuper)
 
 soup = bs(drvr.page_source, 'html.parser')
@@ -47,7 +47,7 @@ enlaces_departamentos = [enlaces[departamento]['href'] for departamento in range
 enlaces_departamentos = [enlace for enlace in enlaces_departamentos if 'departamento' in enlace]
 
 flag = drvr.find_element(By.XPATH, '/html/body/app-root/div/app-home-footer/footer')
-
+print(enlaces_departamentos)
 for departamento in enlaces_departamentos:
     drvr.get(path_alsuper + departamento)
     flag = drvr.find_element(By.XPATH, '/html/body/app-root/div/app-home-footer/footer')
